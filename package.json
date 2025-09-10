@@ -1,6 +1,7 @@
 {
   "name": "modern-api-testing-framework",
   "version": "1.0.0",
+  "type": "module",
   "description": "Modern API testing framework with Playwright",
   "scripts": {
     "test": "playwright test",
