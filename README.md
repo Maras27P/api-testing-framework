@@ -54,7 +54,6 @@ Skopiuj `env.example` do `.env` i skonfiguruj:
 NODE_ENV=dev
 
 # URLs - domyślnie skonfigurowane dla awesome-localstack
-# UWAGA: Bez /api na końcu! API ma własne prefiksy w endpointach
 DEV_BASE_URL=http://localhost:4001
 STAGING_BASE_URL=https://api-staging.example.com
 PROD_BASE_URL=https://api.example.com
