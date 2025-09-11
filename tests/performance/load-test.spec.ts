@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { ApiClient } from '../../src/utils/api-client';
 
 test.describe('Performance Tests', () => {
@@ -7,8 +7,8 @@ test.describe('Performance Tests', () => {
     const concurrentRequests = 10;
     const startTime = Date.now();
 
-    const promises = Array.from({ length: concurrentRequests }, (_, i) =>
-      apiClient.get(`/users/${i + 1}`)
+    const promises = Array.from({ length: concurrentRequests }, () =>
+      apiClient.get('/users')
     );
 
     const responses = await Promise.all(promises);
@@ -35,7 +35,7 @@ test.describe('Performance Tests', () => {
 
     for (let i = 0; i < iterations; i++) {
       const startTime = Date.now();
-      const response = await apiClient.get('/users/1');
+      const response = await apiClient.get('/users');
       const endTime = Date.now();
 
       expect(response.status()).toBe(200);

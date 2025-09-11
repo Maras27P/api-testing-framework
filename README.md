@@ -60,7 +60,6 @@ STAGING_BASE_URL=https://api-staging.example.com
 PROD_BASE_URL=https://api.example.com
 
 # Dane logowania do awesome-localstack API
-# UWAGA: Używa username, nie email!
 DEV_USERNAME=admin
 DEV_PASSWORD=admin
 
@@ -108,7 +107,7 @@ await apiClient.logout();
 
 - ✅ **Automatyczne logowanie** z danymi z konfiguracji
 - ✅ **Zarządzanie tokenami JWT** z automatycznym odświeżaniem
-- ✅ **Obsługa wygasania tokenów** 
+- ✅ **Obsługa wygasania tokenów**
 - ✅ **Automatyczne dodawanie nagłówków** autoryzacji
 - ✅ **Graceful handling** błędów połączenia
 - ✅ **Wsparcie dla różnych środowisk** (dev/staging/prod)
@@ -130,6 +129,7 @@ curl http://localhost:4001/health
 ```
 
 **Dostępne endpointy:**
+
 - Backend API: http://localhost:4001
 - Frontend: http://localhost:8081
 - Swagger UI: http://localhost:4001/swagger-ui/index.html
