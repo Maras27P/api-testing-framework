@@ -54,13 +54,15 @@ Skopiuj `env.example` do `.env` i skonfiguruj:
 NODE_ENV=dev
 
 # URLs - domyślnie skonfigurowane dla awesome-localstack
-DEV_BASE_URL=http://localhost:4001/api
+# UWAGA: Bez /api na końcu! API ma własne prefiksy w endpointach
+DEV_BASE_URL=http://localhost:4001
 STAGING_BASE_URL=https://api-staging.example.com
 PROD_BASE_URL=https://api.example.com
 
 # Dane logowania do awesome-localstack API
-DEV_USERNAME=testuser@example.com
-DEV_PASSWORD=password123
+# UWAGA: Używa username, nie email!
+DEV_USERNAME=admin
+DEV_PASSWORD=admin
 
 # JWT Tokens (będą ustawiane automatycznie po logowaniu)
 DEV_JWT_TOKEN=
@@ -124,7 +126,7 @@ cd awesome-localstack
 docker compose up -d
 
 # Sprawdź czy API działa
-curl http://localhost:4001/api/health
+curl http://localhost:4001/health
 ```
 
 **Dostępne endpointy:**
