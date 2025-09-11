@@ -10,6 +10,8 @@ export interface Environment {
   retries: number;
   apiKey?: string;
   authToken?: string;
+  username?: string;
+  password?: string;
   isProduction: boolean;
   debugMode: boolean;
 }
@@ -42,10 +44,13 @@ const getEnvBoolean = (name: string, defaultValue: boolean): boolean => {
 export const environments: Record<string, Environment> = {
   dev: {
     name: 'Development',
-    baseUrl: getEnvVar('DEV_BASE_URL', 'https://jsonplaceholder.typicode.com'),
+    baseUrl: getEnvVar('DEV_BASE_URL', 'http://localhost:4001'),
     timeout: getEnvNumber('API_TIMEOUT', 30000),
     retries: getEnvNumber('RETRY_COUNT', 2),
     apiKey: process.env.DEV_API_KEY,
+    authToken: process.env.DEV_AUTH_TOKEN || process.env.DEV_JWT_TOKEN,
+    username: process.env.DEV_USERNAME,
+    password: process.env.DEV_PASSWORD,
     isProduction: false,
     debugMode: getEnvBoolean('DEBUG_MODE', true),
   },
@@ -55,6 +60,9 @@ export const environments: Record<string, Environment> = {
     timeout: getEnvNumber('API_TIMEOUT', 30000),
     retries: getEnvNumber('RETRY_COUNT', 3),
     apiKey: process.env.STAGING_API_KEY,
+    authToken: process.env.STAGING_AUTH_TOKEN || process.env.STAGING_JWT_TOKEN,
+    username: process.env.STAGING_USERNAME,
+    password: process.env.STAGING_PASSWORD,
     isProduction: false,
     debugMode: getEnvBoolean('DEBUG_MODE', false),
   },
@@ -64,6 +72,9 @@ export const environments: Record<string, Environment> = {
     timeout: getEnvNumber('API_TIMEOUT', 60000),
     retries: getEnvNumber('RETRY_COUNT', 3),
     apiKey: process.env.PROD_API_KEY,
+    authToken: process.env.PROD_AUTH_TOKEN || process.env.PROD_JWT_TOKEN,
+    username: process.env.PROD_USERNAME,
+    password: process.env.PROD_PASSWORD,
     isProduction: true,
     debugMode: false, // Nigdy nie debuguj na produkcji
   },
@@ -81,7 +92,7 @@ export const getCurrentEnvironment = (): Environment => {
 
   if (!environment) {
     console.warn(`⚠️ Nieznane środowisko: ${envName}. Używam 'dev'.`);
-    return environments.dev;
+    return environments.dev!;
   }
 
   if (environment.debugMode) {
