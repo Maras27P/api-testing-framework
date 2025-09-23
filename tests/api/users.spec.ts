@@ -26,30 +26,41 @@ test.describe('Users API Tests', () => {
   });
 
   test('GET /users - should return all users @smoke', async () => {
-    const response = await apiClient.get('/users');
-
-    await assertions.assertStatusCode(response, 200);
-    await assertions.assertHeaders(response, {
+    // ARRANGE - Przygotowanie danych testowych
+    const endpoint = '/users';
+    const expectedStatusCode = 200;
+    const expectedHeaders = {
       'content-type': 'application/json;charset=UTF-8',
-    });
+    };
+
+    // ACT - Wykonanie akcji: pobranie listy użytkowników
+    const response = await apiClient.get(endpoint);
+
+    // ASSERT - Weryfikacja rezultatów
+    await assertions.assertStatusCode(response, expectedStatusCode);
+    await assertions.assertHeaders(response, expectedHeaders);
 
     const users = await response.json();
     expect(users.length).toBeGreaterThan(0);
   });
 
   test('GET /users/{username} - should return specific user @regression', async () => {
-    // Najpierw pobierz listę użytkowników, żeby znaleźć istniejącego
-    const usersResponse = await apiClient.get('/users');
-    const users = await usersResponse.json();
+    // ARRANGE - Przygotowanie danych testowych
+    const usersListEndpoint = '/users';
+    const expectedStatusCode = 200;
 
-    // Użyj pierwszego dostępnego użytkownika
+    // Pobierz listę użytkowników, żeby znaleźć istniejącego
+    const usersResponse = await apiClient.get(usersListEndpoint);
+    const users = await usersResponse.json();
     const firstUser = users[0];
     expect(firstUser).toBeDefined();
+    const targetUsername = firstUser.username;
 
-    const username = firstUser.username;
-    const response = await apiClient.get(`/users/${username}`);
+    // ACT - Wykonanie akcji: pobranie konkretnego użytkownika
+    const response = await apiClient.get(`/users/${targetUsername}`);
 
-    await assertions.assertStatusCode(response, 200);
+    // ASSERT - Weryfikacja rezultatów
+    await assertions.assertStatusCode(response, expectedStatusCode);
     await assertions.assertSchema(response, userSchema);
 
     // Sprawdź czy dane zawierają podstawowe pola
@@ -61,20 +72,23 @@ test.describe('Users API Tests', () => {
   });
 
   test('POST /users - should create new user @regression', async () => {
+    // ARRANGE - Przygotowanie danych testowych
     const newUser = UserFixtures.createValidUser();
-    const response = await apiClient.post('/users', newUser);
+    const endpoint = '/users';
+    const expectedStatusCode = 201;
 
+    // ACT - Wykonanie akcji: tworzenie nowego użytkownika
+    const response = await apiClient.post(endpoint, newUser);
+
+    // ASSERT - Weryfikacja rezultatów
     // Sprawdź czy użytkownik ma uprawnienia do tworzenia użytkowników
     if (response.status() === 401) {
-      // eslint-disable-next-line no-console
-      console.log(
-        '⚠️ Użytkownik nie ma uprawnień do tworzenia użytkowników - test pominięty'
-      );
+      // Użytkownik nie ma uprawnień do tworzenia użytkowników - test pominięty
       expect(response.status()).toBe(401);
       return;
     }
 
-    await assertions.assertStatusCode(response, 201);
+    await assertions.assertStatusCode(response, expectedStatusCode);
 
     const createdUser = await response.json();
     expect(createdUser).toMatchObject(newUser);
@@ -84,45 +98,63 @@ test.describe('Users API Tests', () => {
   // ==================== PUT /users/{username} - Kompletne testy walidacji ====================
 
   test('PUT /users/{username} - should successfully update user with valid data @regression', async () => {
+    // ARRANGE - Przygotowanie danych testowych
+    const usersListEndpoint = '/users';
+
     // Pobierz istniejącego użytkownika
-    const usersResponse = await apiClient.get('/users');
+    const usersResponse = await apiClient.get(usersListEndpoint);
     const users = await usersResponse.json();
     const firstUser = users[0];
+    const targetUsername = firstUser.username;
 
-    const username = firstUser.username;
     const validUpdateData = {
       email: 'updated.email@example.com',
       firstName: 'Mirek', // 5 znaków - powyżej minimum 4
       lastName: 'Kowalski',
     };
+    const expectedStatusCode = 200;
 
-    const response = await apiClient.put(`/users/${username}`, validUpdateData);
+    // ACT - Wykonanie akcji: aktualizacja użytkownika
+    const response = await apiClient.put(
+      `/users/${targetUsername}`,
+      validUpdateData
+    );
 
-    await assertions.assertStatusCode(response, 200);
+    // ASSERT - Weryfikacja rezultatów
+    await assertions.assertStatusCode(response, expectedStatusCode);
 
     const updatedUser = await response.json();
     expect(updatedUser.email).toBe(validUpdateData.email);
     expect(updatedUser.firstName).toBe(validUpdateData.firstName);
     expect(updatedUser.lastName).toBe(validUpdateData.lastName);
-    expect(updatedUser.username).toBe(username);
+    expect(updatedUser.username).toBe(targetUsername);
   });
 
   test('PUT /users/{username} - should validate firstName minLength (3 characters too short)', async () => {
+    // ARRANGE - Przygotowanie danych testowych
+    const usersListEndpoint = '/users';
+
     // Pobierz istniejącego użytkownika
-    const usersResponse = await apiClient.get('/users');
+    const usersResponse = await apiClient.get(usersListEndpoint);
     const users = await usersResponse.json();
     const firstUser = users[0];
+    const targetUsername = firstUser.username;
 
-    const username = firstUser.username;
     const invalidData = {
       email: 'test@example.com',
       firstName: 'Jo', // 2 znaki - poniżej minimum 4
     };
+    const expectedErrorCodes = [400, 422];
 
-    const response = await apiClient.put(`/users/${username}`, invalidData);
+    // ACT - Wykonanie akcji: próba aktualizacji z nieprawidłowymi danymi
+    const response = await apiClient.put(
+      `/users/${targetUsername}`,
+      invalidData
+    );
 
+    // ASSERT - Weryfikacja rezultatów
     // API powinno zwrócić błąd walidacji - firstName ma tylko 2 znaki
-    expect([400, 422]).toContain(response.status());
+    expect(expectedErrorCodes).toContain(response.status());
 
     const responseText = await response.text();
     const errorResponse = JSON.parse(responseText);
@@ -132,26 +164,32 @@ test.describe('Users API Tests', () => {
   });
 
   test('PUT /users/{username} - should update user with only required email field', async () => {
+    // ARRANGE - Przygotowanie danych testowych
+    const usersListEndpoint = '/users';
+
     // Pobierz istniejącego użytkownika
-    const usersResponse = await apiClient.get('/users');
+    const usersResponse = await apiClient.get(usersListEndpoint);
     const users = await usersResponse.json();
     const firstUser = users[0];
+    const targetUsername = firstUser.username;
 
-    const username = firstUser.username;
     const minimalUpdateData = {
       email: 'minimal.update@example.com',
     };
+    const expectedStatusCode = 200;
 
+    // ACT - Wykonanie akcji: aktualizacja tylko wymaganego pola email
     const response = await apiClient.put(
-      `/users/${username}`,
+      `/users/${targetUsername}`,
       minimalUpdateData
     );
 
-    await assertions.assertStatusCode(response, 200);
+    // ASSERT - Weryfikacja rezultatów
+    await assertions.assertStatusCode(response, expectedStatusCode);
 
     const updatedUser = await response.json();
     expect(updatedUser.email).toBe(minimalUpdateData.email);
-    expect(updatedUser.username).toBe(username);
+    expect(updatedUser.username).toBe(targetUsername);
   });
 
   test('PUT /users/{username} - should validate firstName minLength (4 characters)', async () => {
@@ -355,113 +393,156 @@ test.describe('Users API Tests', () => {
   });
 
   test('DELETE /users/{username} - should delete user @regression', async () => {
-    // Najpierw utwórz użytkownika do usunięcia
+    // ARRANGE - Przygotowanie danych testowych
     const newUser = UserFixtures.createValidUser();
-    const createResponse = await apiClient.post('/users', newUser);
+    const createEndpoint = '/users';
+    const expectedCreateStatusCode = 201;
+    const expectedDeleteStatusCode = 200;
+
+    // Najpierw utwórz użytkownika do usunięcia
+    const createResponse = await apiClient.post(createEndpoint, newUser);
 
     // Sprawdź czy można tworzyć użytkowników
     if (createResponse.status() === 401) {
-      // eslint-disable-next-line no-console
-      console.log(
-        '⚠️ Użytkownik nie ma uprawnień do tworzenia/usuwania użytkowników - test pominięty'
-      );
+      // Użytkownik nie ma uprawnień do tworzenia/usuwania użytkowników - test pominięty
       expect(createResponse.status()).toBe(401);
       return;
     }
 
-    if (createResponse.status() !== 201) {
+    if (createResponse.status() !== expectedCreateStatusCode) {
       throw new Error(
         `Nie udało się utworzyć użytkownika: ${createResponse.status()}`
       );
     }
 
     const createdUser = await createResponse.json();
-    const username = createdUser.username;
+    const targetUsername = createdUser.username;
 
-    // Teraz usuń utworzonego użytkownika
-    const response = await apiClient.delete(`/users/${username}`);
+    // ACT - Wykonanie akcji: usunięcie użytkownika
+    const response = await apiClient.delete(`/users/${targetUsername}`);
 
-    await assertions.assertStatusCode(response, 200);
+    // ASSERT - Weryfikacja rezultatów
+    await assertions.assertStatusCode(response, expectedDeleteStatusCode);
   });
 
   test('GET /users/{username} - should return 404 for non-existent user', async () => {
-    const response = await apiClient.get('/users/non_existent_user');
-    await assertions.assertStatusCode(response, 404);
+    // ARRANGE - Przygotowanie danych testowych
+    const nonExistentUsername = 'non_existent_user';
+    const endpoint = `/users/${nonExistentUsername}`;
+    const expectedStatusCode = 404;
+
+    // ACT - Wykonanie akcji: próba pobrania nieistniejącego użytkownika
+    const response = await apiClient.get(endpoint);
+
+    // ASSERT - Weryfikacja rezultatów
+    await assertions.assertStatusCode(response, expectedStatusCode);
   });
 
   test('POST /users - should validate required fields', async () => {
+    // ARRANGE - Przygotowanie danych testowych
     const invalidUser = UserFixtures.createInvalidUser();
-    const response = await apiClient.post('/users', invalidUser);
+    const endpoint = '/users';
+    const validErrorCodes = [400, 401, 422]; // API może zwracać różne kody błędów
 
-    // API może zwracać różne kody błędów (włącznie z 401 jeśli brak uprawnień)
-    const validErrorCodes = [400, 401, 422];
+    // ACT - Wykonanie akcji: próba utworzenia użytkownika z nieprawidłowymi danymi
+    const response = await apiClient.post(endpoint, invalidUser);
+
+    // ASSERT - Weryfikacja rezultatów
     expect(validErrorCodes).toContain(response.status());
   });
 
   test('PUT /users/{username} - should return 404 for non-existent user', async () => {
+    // ARRANGE - Przygotowanie danych testowych
+    const nonExistentUsername = 'non_existent_user';
     const validUpdateData = {
       email: 'test@example.com',
       firstName: 'Mirek',
       lastName: 'Kowalski',
     };
-    const response = await apiClient.put(
-      '/users/non_existent_user',
-      validUpdateData
-    );
+    const endpoint = `/users/${nonExistentUsername}`;
+    const expectedStatusCode = 404;
 
-    await assertions.assertStatusCode(response, 404);
+    // ACT - Wykonanie akcji: próba aktualizacji nieistniejącego użytkownika
+    const response = await apiClient.put(endpoint, validUpdateData);
+
+    // ASSERT - Weryfikacja rezultatów
+    await assertions.assertStatusCode(response, expectedStatusCode);
   });
 
   test('PUT /users/{username} - should handle empty request body', async () => {
+    // ARRANGE - Przygotowanie danych testowych
+    const usersListEndpoint = '/users';
+
     // Pobierz istniejącego użytkownika
-    const usersResponse = await apiClient.get('/users');
+    const usersResponse = await apiClient.get(usersListEndpoint);
     const users = await usersResponse.json();
     const firstUser = users[0];
+    const targetUsername = firstUser.username;
 
-    const username = firstUser.username;
-    const response = await apiClient.put(`/users/${username}`, {});
+    const emptyRequestBody = {};
+    const expectedErrorCodes = [400, 422]; // API powinno zwrócić błąd walidacji
 
+    // ACT - Wykonanie akcji: próba aktualizacji z pustym ciałem żądania
+    const response = await apiClient.put(
+      `/users/${targetUsername}`,
+      emptyRequestBody
+    );
+
+    // ASSERT - Weryfikacja rezultatów
     // API powinno zwrócić błąd walidacji - brak wymaganego pola email
-    expect([400, 422]).toContain(response.status());
+    expect(expectedErrorCodes).toContain(response.status());
   });
 
   test('PUT /users/{username} - should handle null values', async () => {
+    // ARRANGE - Przygotowanie danych testowych
+    const usersListEndpoint = '/users';
+
     // Pobierz istniejącego użytkownika
-    const usersResponse = await apiClient.get('/users');
+    const usersResponse = await apiClient.get(usersListEndpoint);
     const users = await usersResponse.json();
     const firstUser = users[0];
+    const targetUsername = firstUser.username;
 
-    const username = firstUser.username;
-    const invalidData = {
+    const dataWithNullValues = {
       email: 'test@example.com',
       firstName: null,
       lastName: null,
     };
+    const possibleStatusCodes = [200, 400, 422]; // API może zwrócić błąd walidacji lub zaakceptować null
 
-    const response = await apiClient.put(`/users/${username}`, invalidData);
+    // ACT - Wykonanie akcji: próba aktualizacji z wartościami null
+    const response = await apiClient.put(
+      `/users/${targetUsername}`,
+      dataWithNullValues
+    );
 
-    // API może zwrócić błąd walidacji lub zaakceptować null
-    expect([200, 400, 422]).toContain(response.status());
+    // ASSERT - Weryfikacja rezultatów
+    expect(possibleStatusCodes).toContain(response.status());
   });
 
   test('PUT /users/{username} - should handle special characters in names', async () => {
+    // ARRANGE - Przygotowanie danych testowych
+    const usersListEndpoint = '/users';
+
     // Pobierz istniejącego użytkownika
-    const usersResponse = await apiClient.get('/users');
+    const usersResponse = await apiClient.get(usersListEndpoint);
     const users = await usersResponse.json();
     const firstUser = users[0];
+    const targetUsername = firstUser.username;
 
-    const username = firstUser.username;
     const specialCharsData = {
       email: 'test@example.com',
       firstName: 'Józef-Łukasz',
       lastName: "O'Connor-Müller",
     };
 
+    // ACT - Wykonanie akcji: próba aktualizacji z znakami specjalnymi
     const response = await apiClient.put(
-      `/users/${username}`,
+      `/users/${targetUsername}`,
       specialCharsData
     );
 
+    // ASSERT - Weryfikacja rezultatów
     if (response.status() === 200) {
       const updatedUser = await response.json();
       expect(updatedUser.firstName).toBe(specialCharsData.firstName);
@@ -473,20 +554,28 @@ test.describe('Users API Tests', () => {
   });
 
   test('PUT /users/{username} - should handle whitespace in names', async () => {
+    // ARRANGE - Przygotowanie danych testowych
+    const usersListEndpoint = '/users';
+
     // Pobierz istniejącego użytkownika
-    const usersResponse = await apiClient.get('/users');
+    const usersResponse = await apiClient.get(usersListEndpoint);
     const users = await usersResponse.json();
     const firstUser = users[0];
+    const targetUsername = firstUser.username;
 
-    const username = firstUser.username;
     const whitespaceData = {
       email: 'test@example.com',
       firstName: '  Jan  ', // Spacje na początku i końcu
       lastName: '  Kowalski  ',
     };
 
-    const response = await apiClient.put(`/users/${username}`, whitespaceData);
+    // ACT - Wykonanie akcji: próba aktualizacji z spacjami
+    const response = await apiClient.put(
+      `/users/${targetUsername}`,
+      whitespaceData
+    );
 
+    // ASSERT - Weryfikacja rezultatów
     if (response.status() === 200) {
       const updatedUser = await response.json();
       // API może przycinać spacje lub je zachować
@@ -498,32 +587,53 @@ test.describe('Users API Tests', () => {
   });
 
   test('DELETE /users/{username} - should return 404 for non-existent user', async () => {
-    const response = await apiClient.delete('/users/non_existent_user');
+    // ARRANGE - Przygotowanie danych testowych
+    const nonExistentUsername = 'non_existent_user';
+    const endpoint = `/users/${nonExistentUsername}`;
+    const expectedStatusCode = 404;
 
-    await assertions.assertStatusCode(response, 404);
+    // ACT - Wykonanie akcji: próba usunięcia nieistniejącego użytkownika
+    const response = await apiClient.delete(endpoint);
+
+    // ASSERT - Weryfikacja rezultatów
+    await assertions.assertStatusCode(response, expectedStatusCode);
   });
 
   test('GET /users/{username} - should handle special characters in username', async () => {
-    const username = 'user.with-special_chars';
-    const response = await apiClient.get(`/users/${username}`);
+    // ARRANGE - Przygotowanie danych testowych
+    const usernameWithSpecialChars = 'user.with-special_chars';
+    const endpoint = `/users/${usernameWithSpecialChars}`;
+    const possibleStatusCodes = [200, 404]; // Może zwrócić 200 (jeśli user istnieje) lub 404 (jeśli nie istnieje)
 
-    // Może zwrócić 200 (jeśli user istnieje) lub 404 (jeśli nie istnieje)
-    expect([200, 404]).toContain(response.status());
+    // ACT - Wykonanie akcji: próba pobrania użytkownika z znakami specjalnymi
+    const response = await apiClient.get(endpoint);
+
+    // ASSERT - Weryfikacja rezultatów
+    expect(possibleStatusCodes).toContain(response.status());
   });
 
   test('PUT /users/{username} - should validate unknown fields', async () => {
+    // ARRANGE - Przygotowanie danych testowych
+    const usersListEndpoint = '/users';
+
     // Pobierz istniejącego użytkownika
-    const usersResponse = await apiClient.get('/users');
+    const usersResponse = await apiClient.get(usersListEndpoint);
     const users = await usersResponse.json();
     const firstUser = users[0];
+    const targetUsername = firstUser.username;
 
-    const username = firstUser.username;
-    const invalidData = {
+    const dataWithUnknownField = {
       email: 'test@example.com',
       unknownField: 'invalid_value', // Nieznane pole
     };
-    const response = await apiClient.put(`/users/${username}`, invalidData);
 
+    // ACT - Wykonanie akcji: próba aktualizacji z nieznanym polem
+    const response = await apiClient.put(
+      `/users/${targetUsername}`,
+      dataWithUnknownField
+    );
+
+    // ASSERT - Weryfikacja rezultatów
     // API może zaakceptować nieznane pola lub zwrócić błąd
     if (response.status() === 200) {
       const updatedUser = await response.json();
