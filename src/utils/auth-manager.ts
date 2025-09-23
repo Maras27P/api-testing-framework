@@ -21,7 +21,7 @@ export class AuthManager {
    */
   async login(username?: string, password?: string): Promise<string> {
     const env = getCurrentEnvironment();
-    
+
     // Użyj danych z parametrów lub z konfiguracji środowiska
     const loginData = {
       username: username || env.username,
@@ -29,7 +29,9 @@ export class AuthManager {
     };
 
     if (!loginData.username || !loginData.password) {
-      throw new Error('Brak danych logowania! Sprawdź konfigurację środowiska.');
+      throw new Error(
+        'Brak danych logowania! Sprawdź konfigurację środowiska.'
+      );
     }
 
     if (env.debugMode) {
@@ -56,16 +58,19 @@ export class AuthManager {
       }
 
       const responseData = await response.json();
-      
+
       // Różne API mogą zwracać token w różnych polach
-      this.token = responseData.token || responseData.access_token || responseData.jwt;
-      
+      this.token =
+        responseData.token || responseData.access_token || responseData.jwt;
+
       if (!this.token) {
         throw new Error('Nie znaleziono tokena w odpowiedzi API');
       }
 
       // Ustaw czas wygaśnięcia tokena (domyślnie 1 godzina)
-      this.tokenExpiry = new Date(Date.now() + (responseData.expires_in || 3600) * 1000);
+      this.tokenExpiry = new Date(
+        Date.now() + (responseData.expires_in || 3600) * 1000
+      );
 
       if (env.debugMode) {
         console.log(`✅ Login successful! Token received.`);
@@ -91,7 +96,7 @@ export class AuthManager {
 
     // Sprawdź czy token nie wygasł (z 5-minutowym buforem)
     const bufferTime = 5 * 60 * 1000; // 5 minut w milisekundach
-    return Date.now() < (this.tokenExpiry.getTime() - bufferTime);
+    return Date.now() < this.tokenExpiry.getTime() - bufferTime;
   }
 
   /**
@@ -129,7 +134,7 @@ export class AuthManager {
    */
   async logout(): Promise<void> {
     const env = getCurrentEnvironment();
-    
+
     if (this.token && env.debugMode) {
       console.log('🚪 Wylogowuję użytkownika...');
     }
@@ -153,7 +158,7 @@ export class AuthManager {
       // Wyczyść lokalny stan
       this.token = null;
       this.tokenExpiry = null;
-      
+
       if (env.debugMode) {
         console.log('✅ Użytkownik wylogowany');
       }

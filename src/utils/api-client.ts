@@ -1,4 +1,8 @@
-import { APIRequestContext, APIResponse } from '@playwright/test';
+import {
+  APIRequestContext,
+  APIRequestOptions,
+  APIResponse,
+} from '@playwright/test';
 import { getCurrentEnvironment } from '../config/environment';
 import { AuthManager } from './auth-manager';
 
@@ -13,7 +17,11 @@ export class ApiClient {
     this.authManager = new AuthManager(context);
   }
 
-  async get(endpoint: string, options?: any): Promise<APIResponse> {
+  async get(
+    endpoint: string,
+    options?: APIRequestOptions
+  ): Promise<APIResponse> {
+    // Komentarz: używamy APIRequestOptions zamiast any, żeby TypeScript pilnował poprawnych pól w konfiguracji zapytania.
     const defaultHeaders = await this.getDefaultHeaders();
     return await this.context.get(`${this.baseURL}${endpoint}`, {
       ...options,
@@ -26,9 +34,10 @@ export class ApiClient {
 
   async post(
     endpoint: string,
-    data?: any,
-    options?: any
+    data?: unknown,
+    options?: APIRequestOptions
   ): Promise<APIResponse> {
+    // Komentarz: typ unknown dla data zmusza nas do jawnej walidacji/konwersji danych wejściowych przy wywołaniu.
     const defaultHeaders = await this.getDefaultHeaders();
     return await this.context.post(`${this.baseURL}${endpoint}`, {
       data,
@@ -40,7 +49,12 @@ export class ApiClient {
     });
   }
 
-  async put(endpoint: string, data?: any, options?: any): Promise<APIResponse> {
+  async put(
+    endpoint: string,
+    data?: unknown,
+    options?: APIRequestOptions
+  ): Promise<APIResponse> {
+    // Komentarz: utrzymujemy spójny typ (unknown) dla payloadu, żeby unikać pochopnego traktowania go jako dowolnego obiektu.
     const defaultHeaders = await this.getDefaultHeaders();
     return await this.context.put(`${this.baseURL}${endpoint}`, {
       data,
@@ -52,7 +66,10 @@ export class ApiClient {
     });
   }
 
-  async delete(endpoint: string, options?: any): Promise<APIResponse> {
+  async delete(
+    endpoint: string,
+    options?: APIRequestOptions
+  ): Promise<APIResponse> {
     const defaultHeaders = await this.getDefaultHeaders();
     return await this.context.delete(`${this.baseURL}${endpoint}`, {
       ...options,
@@ -65,9 +82,10 @@ export class ApiClient {
 
   async patch(
     endpoint: string,
-    data?: any,
-    options?: any
+    data?: unknown,
+    options?: APIRequestOptions
   ): Promise<APIResponse> {
+    // Komentarz: patch bywa szczególnie wrażliwy na strukturę danych, dlatego pozostajemy przy unknown.
     const defaultHeaders = await this.getDefaultHeaders();
     return await this.context.patch(`${this.baseURL}${endpoint}`, {
       data,
@@ -86,7 +104,7 @@ export class ApiClient {
     };
 
     const env = getCurrentEnvironment();
-    
+
     // Dodaj API Key jeśli jest dostępny
     if (env.apiKey) {
       headers['X-API-Key'] = env.apiKey;
@@ -113,7 +131,7 @@ export class ApiClient {
   /**
    * Metody do zarządzania autoryzacją
    */
-  
+
   /**
    * Loguje użytkownika i uzyskuje token JWT
    */

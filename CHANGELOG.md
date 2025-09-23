@@ -1,10 +1,26 @@
 # 📋 Historia zmian
 
+## 🚀 **Wersja 2.1.0 - Typowanie klienta API i helper testów** (2025-09-23)
+
+### ✅ **Ulepszenia**
+
+- **`ApiClient`** korzysta z oficjalnego typu `APIRequestOptions`, a przekazywany payload ma typ `unknown` – dzięki temu kompilator pilnuje poprawnej konfiguracji żądań.
+- Dodane komentarze w kodzie wyjaśniające decyzje typów, co ułatwia naukę osobom początkującym.
+- W testach autoryzacji pojawił się helper `handleKnownAuthError`, który inteligentnie rozpoznaje brak backendu lub złe dane logowania i informuje o tym użytkownika.
+- README poszerzono o przykład helpera oraz wzmiankę o nowym typowaniu klienta API.
+
+### 🔍 **Notatki**
+
+- Testy `auth.spec.ts` zostały tak przygotowane, by w środowisku lokalnym nie blokowały pracy, gdy backend jest wyłączony.
+
+---
+
 ## 🎯 **Wersja 2.0.0 - Autoryzacja JWT** (2025-01-16)
 
 ### ✅ **Dodane funkcjonalności:**
 
 #### **🔐 Autoryzacja JWT**
+
 - **`AuthManager`** - kompleksowe zarządzanie tokenami JWT
 - **Automatyczne logowanie** z danymi z konfiguracji środowiska
 - **Automatyczne odświeżanie tokenów** przy wygaśnięciu
@@ -12,33 +28,39 @@
 - **Obsługa różnych środowisk** (dev/staging/prod)
 
 #### **🛠️ Rozszerzone API Client**
+
 - **Automatyczne dodawanie nagłówków autoryzacji** do wszystkich żądań
 - **Metody zarządzania sesją**: `login()`, `logout()`, `isAuthenticated()`, `getToken()`
 - **Asynchroniczne nagłówki** z lazy loading tokenów
 - **Fallback na tokeny z konfiguracji** środowiska
 
 #### **⚙️ Konfiguracja środowiska**
+
 - **Wsparcie dla danych logowania** (`username`, `password`)
 - **Aktualizacja dla awesome-localstack** (`http://localhost:4001`)
 - **Dokumentacja konfiguracji** w README
 
 #### **🧪 Testy autoryzacji**
+
 - **Kompletny zestaw testów JWT** w `auth.spec.ts`
 - **Inteligentne obsługiwanie błędów** (offline API vs błędne dane)
 - **Testy przepływu autoryzacji** (login → request → logout)
 - **Informacyjne komunikaty** dla różnych scenariuszy
 
 ### 🧹 **Usunięte pliki eksploracyjne:**
+
 - ❌ `connection-test.spec.ts`
-- ❌ `url-test.spec.ts` 
+- ❌ `url-test.spec.ts`
 - ❌ `simple-auth-test.spec.ts`
 
 ### 📚 **Zaktualizowana dokumentacja:**
+
 - **README.md** - sekcje o autoryzacji JWT i awesome-localstack
 - **Instrukcje konfiguracji** danych logowania
 - **Przykłady użycia** frameworka autoryzacji
 
 ### 🎯 **Kompatybilność:**
+
 - **Backward compatible** - stare testy nadal działają
 - **Graceful degradation** - framework działa bez API
 - **Elastyczna konfiguracja** - można używać z różnymi API
@@ -48,6 +70,7 @@
 ## 📈 **Wersja 1.0.0 - Framework podstawowy**
 
 ### ✅ **Funkcjonalności bazowe:**
+
 - **Playwright** jako silnik testowy
 - **TypeScript** z pełnym typowaniem
 - **Multi-environment** support (dev/staging/prod)
@@ -57,6 +80,7 @@
 - **Code quality** (ESLint, Prettier, Husky)
 
 ### 📁 **Struktura projektu:**
+
 ```
 src/
 ├── config/environment.ts      # Zarządzanie środowiskami
@@ -79,6 +103,7 @@ tests/
 ## 🚀 **Następne kroki:**
 
 ### **Planowane funkcjonalności:**
+
 - 🔄 **Integracja z prawdziwymi danymi** z awesome-localstack
 - 📊 **Rozszerzone modele danych** (produkty, zamówienia, etc.)
 - 🧪 **Testy end-to-end** całych przepływów biznesowych

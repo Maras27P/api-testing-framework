@@ -108,6 +108,7 @@ await apiClient.logout();
 - ✅ **Zarządzanie tokenami JWT** z automatycznym odświeżaniem
 - ✅ **Obsługa wygasania tokenów**
 - ✅ **Automatyczne dodawanie nagłówków** autoryzacji
+- ✅ **Ścisłe typowanie żądań HTTP** (wykorzystanie `APIRequestOptions` w `ApiClient`)
 - ✅ **Graceful handling** błędów połączenia
 - ✅ **Wsparcie dla różnych środowisk** (dev/staging/prod)
 
@@ -332,6 +333,29 @@ Framework automatycznie sprawdza kod przed każdym commitem dzięki Husky i lint
   }
 }
 ```
+
+### Obsługa typowych błędów (offline API / złe dane)
+
+```typescript
+const handleKnownAuthError = (error: unknown): boolean => {
+  // Wspólny helper w testach auth – informuje o spodziewanych problemach
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (['ECONNREFUSED', 'socket hang up'].some(code => message.includes(code))) {
+    console.warn('⏸️ Test pominięty: API jest niedostępne.');
+    return true;
+  }
+
+  if (['Unauthorized', '401'].some(code => message.includes(code))) {
+    console.warn('⚠️ Test pominięty: niepoprawne dane logowania.');
+    return true;
+  }
+
+  return false;
+};
+```
+
+Komentarz: helper pozwala początkującym szybko rozpoznać, czy problem wynika z wyłączonego backendu czy błędnej konfiguracji `.env`, jednocześnie nie zatrzymując całej sesji testowej.
 
 ## 📊 Raporty
 
