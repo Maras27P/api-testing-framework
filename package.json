@@ -52,6 +52,9 @@
     ],
     "*.{json,md}": [
       "prettier --write"
+    ],
+    ".prettierrc": [
+      "prettier --write"
     ]
   }
 }
