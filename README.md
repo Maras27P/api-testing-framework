@@ -2,6 +2,10 @@
 
 Nowoczesny framework do testowania API z użyciem Playwright, TypeScript i najlepszych praktyk.
 
+## 📚 Dokumentacja
+
+- **[Framework Tutorial](Framework-Tutorial.md)** - Kompletny przewodnik nauki frameworka krok po kroku
+
 ## 📋 Spis treści
 
 - [Wymagania](#-wymagania)
